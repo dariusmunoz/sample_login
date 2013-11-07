@@ -8,14 +8,13 @@ $username = $_POST['username'];
 $pw = md5($_POST['pw']);
 $active = $_GET['active'];  //activate when email link is clicked
 
+mssql_connect("localhost","admin_dmunoz","ch1na_ba5in") or die ("Couldn't Connect");
+mssql_select_db("DataSysServicesResourceMgr") or die ("Couldn't Find Database");
+
 if (isset($active))
 	mssql_query("UPDATE admin_users SET active='$active' WHERE fname='$fname' AND lname='$lname' AND username='$username'");
 
 if (isset($registered)){
-	
-	mssql_connect("localhost","admin_dmunoz","ch1na_ba5in") or die ("Couldn't Connect");
-	mssql_select_db("DataSysServicesResourceMgr") or die ("Couldn't Find Database");
-
 	$query = mssql_query("SELECT * FROM admin_users WHERE username='$username'");
 	$numrows = mssql_num_rows($query);
 
@@ -31,22 +30,17 @@ if (isset($registered)){
 		else
 			echo "Incorrect Username or Password";
 	}
-	else{
-		if($active==''){
-			mssql_connect("localhost","admin_dmunoz","ch1na_ba5in") or die ("Couldn't Connect");
-			mssql_select_db("DataSysServicesResourceMgr") or die ("Couldn't Find Database");
+}
 
-			mssql_query("UPDATE admin_users SET fname='$fname', lname='$lname', username='$lname', pw='$pw'");
-			
-			$subject = 'Activate Login Account';
-			$message = '<a href="/admin/index.php?activate=1">Click here to activate your login</a>';
-			$headers = 'From: darius.munoz@ucsf.edu'  .
-				'Reply-To: darius.munoz@ucsf.edu' . "\r\n" .
-				'X-Mailer: PHP/' . phpversion();
-			mail($email, $subject, $message, $headers);			
-		}
-	}
-		die('No Such Admin');
+if($active==''){
+	mssql_query("UPDATE admin_users SET fname='$fname', lname='$lname', username='$lname', pw='$pw'");
+	$subject = 'Activate Login Account';
+	$message = '<a href="/admin/index.php?activate=1">Click here to activate your login</a>';
+	$headers = 'From: darius.munoz@ucsf.edu'  .
+		'Reply-To: darius.munoz@ucsf.edu' . "\r\n" .
+		'X-Mailer: PHP/' . phpversion();
+	mail($email, $subject, $message, $headers);
+	echo 'An email has been sent to '.$email.' with activation information.';
 }
 ?>
 
