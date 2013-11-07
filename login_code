@@ -1,0 +1,92 @@
+<?php
+
+$registered = $_POST['registered'];  //hidden submit to flag for already existing
+$fname = $_POST['fname'];
+$lname = $_POST['lname'];
+$email = $_POST['email'];
+$username = $_POST['username'];
+$pw = md5($_POST['pw']);
+$active = $_GET['active'];  //activate when email link is clicked
+
+if (isset($active))
+	mssql_query("UPDATE admin_users SET active='$active' WHERE fname='$fname' AND lname='$lname' AND username='$username'");
+
+if (isset($registered)){
+	
+	mssql_connect("localhost","admin_dmunoz","ch1na_ba5in") or die ("Couldn't Connect");
+	mssql_select_db("DataSysServicesResourceMgr") or die ("Couldn't Find Database");
+
+	$query = mssql_query("SELECT * FROM admin_users WHERE username='$username'");
+	$numrows = mssql_num_rows($query);
+
+	if ($numrows!=0){
+		while ($row = mssql_fetch_assoc($query)){
+			$db_username = $row['username'];
+			$db_password = $row['password'];
+		}
+		if ($username==$db_username && $password==$db_password && $active=='1'){
+			$_SESSION['admin_loggedin_username'] = $db_acdrs_admin_login_username;
+			header("Location: /admin/index.php");  //continue to login required page
+		}
+		else
+			echo "Incorrect Username or Password";
+	}
+	else{
+		if($active==''){
+			mssql_connect("localhost","admin_dmunoz","ch1na_ba5in") or die ("Couldn't Connect");
+			mssql_select_db("DataSysServicesResourceMgr") or die ("Couldn't Find Database");
+
+			mssql_query("UPDATE admin_users SET fname='$fname', lname='$lname', username='$lname', pw='$pw'");
+			
+			$subject = 'Activate Login Account';
+			$message = '<a href="/admin/index.php?activate=1">Click here to activate your login</a>';
+			$headers = 'From: darius.munoz@ucsf.edu'  .
+				'Reply-To: darius.munoz@ucsf.edu' . "\r\n" .
+				'X-Mailer: PHP/' . phpversion();
+			mail($email, $subject, $message, $headers);			
+		}
+	}
+		die('No Such Admin');
+}
+?>
+
+<html>
+<head><title>Sample Login</title></head>
+<body>
+
+<form action="login.php" method="POST" />
+    User Name:<br />
+    <input type="hidden" name="registered" /><br />
+    <br />
+    <input type="text" name="username" /><br />
+    <br />
+    Password:<br />
+    <input type="password" name="password" /><br />
+    <br />
+    <input type="submit" value="Submit" /><br />
+</form>
+    
+ 
+Register New Login:<br />    
+<form action="login.php" method="POST" />
+    First Name:<br />
+    <input type="text" name="fname" /><br />
+    <br />
+    Last Name:<br />
+    <input type="text" name="lname" /><br />
+    <br />
+    <input type="text" name="username" /><br />
+    <br />
+    Enter a Password:<br />
+    <input type="password" name="pw" /><br />
+    <br />
+    Re-enter Password:<br />
+    <input type="password" name="pw2" /><br />
+    <br />
+    <input type="submit" value="Submit" /><br />
+</form>
+
+</body>
+</html>
+
+
