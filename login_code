@@ -6,6 +6,7 @@ $lname = $_POST['lname'];
 $email = $_POST['email'];
 $username = $_POST['username'];
 $pw = md5($_POST['pw']);
+$pw2 = md5($_POST['pw2']);
 $active = $_GET['active'];  //activate when email link is clicked
 
 mssql_connect("localhost","admin_dmunoz","ch1na_ba5in") or die ("Couldn't Connect");
@@ -33,14 +34,18 @@ if (isset($registered)){
 }
 
 if($active==''){
-	mssql_query("UPDATE admin_users SET fname='$fname', lname='$lname', username='$lname', pw='$pw'");
-	$subject = 'Activate Login Account';
-	$message = '<a href="/admin/index.php?activate=1">Click here to activate your login</a>';
-	$headers = 'From: darius.munoz@ucsf.edu'  .
+	if ($pw==$pw2){
+		mssql_query("UPDATE admin_users SET fname='$fname', lname='$lname', username='$lname', pw='$pw'");
+		$subject = 'Activate Login Account';
+		$message = '<a href="/admin/index.php?activate=1">Click here to activate your login</a>';
+		$headers = 'From: darius.munoz@ucsf.edu'  .
 		'Reply-To: darius.munoz@ucsf.edu' . "\r\n" .
 		'X-Mailer: PHP/' . phpversion();
-	mail($email, $subject, $message, $headers);
-	echo 'An email has been sent to '.$email.' with activation information.';
+		mail($email, $subject, $message, $headers);
+		echo 'An email has been sent to '.$email.' with activation information.';
+	}
+	else
+		echo 'Passwords do not match.  Please re-type passwords.';
 }
 ?>
 
@@ -50,7 +55,7 @@ if($active==''){
 
 <form action="login.php" method="POST" />
     User Name:<br />
-    <input type="hidden" name="registered" /><br />
+    <input type="hidden" name="registered" value="1"/><br />
     <br />
     <input type="text" name="username" /><br />
     <br />
@@ -68,6 +73,9 @@ Register New Login:<br />
     <br />
     Last Name:<br />
     <input type="text" name="lname" /><br />
+    <br />
+    Email:<br />
+    <input type="text" name="email" /><br />
     <br />
     <input type="text" name="username" /><br />
     <br />
