@@ -1,5 +1,7 @@
 <?php
+session_start();
 
+$id = $_GET['id']; //activate when email link is clicked
 $registered = $_POST['registered']; //hidden submit to flag for already existing
 $fname = $_POST['fname'];
 $lname = $_POST['lname'];
@@ -9,31 +11,83 @@ $pw = $_POST['pw'];
 $pw2 = $_POST['pw2'];
 $active = $_GET['active']; //activate when email link is clicked
 
+mysql_connect("localhost","btsstage_darius","parna55u5") or die ("Couldn't Connect");
+mysql_select_db("btsstage_DataSysServicesResourceMgr") or die ("Couldn't Find Database");
 
-if($registered=='0'){
-	mysql_connect("localhost","btsstage_darius","parna55u5") or die ("Couldn't Connect");
-	mysql_select_db("btsstage_DataSysServicesResourceMgr") or die ("Couldn't Find Database");
-	//echo 'Registered is valued at '.$registered;
+if (isset($active))
+		$registered = 1;
+        mysql_query("UPDATE admin_users SET registered='$registered', active='$active' WHERE id='$id'");
 
-	if ($pw==$pw2){
-		//mysql_query("UPDATE admin_users SET registered='1', fname='$fname', lname='$lname', username='$lname', pw='$pw'");
-		mysql_query("INSERT INTO admin_users (fname, lname, email, username, pw, pw2) VALUES ('$fname','$lname','$email','$username','$pw','$pw2')");
-		
-		$query = mysql_query("SELECT * FROM admin_users ORDER BY id DESC LIMIT 1");
-        $row = mysql_fetch_assoc($query);
-		$id = $row['id'];
-		
-		$subject = 'Activate Login Account';
-		$message = '<a href="/dariusadmin/index.php?active=1&id='.$id.'">Click here to activate your login</a>';
-		$headers = 'From: darius.munoz@ucsf.edu' .
-			'Reply-To: darius.munoz@ucsf.edu' . "\r\n" .
-			'X-Mailer: PHP/' . phpversion();
-			mail($email, $subject, $message, $headers);
-			echo 'An email has been sent to '.$email.' with activation information.';
-			
-		//echo $id.' '.$fname.' '.$lname.' has been resgistered as '.$username;
-	}
-	else
-		echo 'Passwords do not match. Please re-type passwords.';
+if ($db_registered==1 && $db_active==1){
+        $query = mysql_query("SELECT * FROM admin_users WHERE username='$username'");
+        $numrows = mysql_num_rows($query);
+
+        if ($numrows!=0){
+                while ($row = mysql_fetch_assoc($query)){
+                        $db_username = $row['username'];
+                        $db_pw = $row['pw'];
+
+                	if ($username==$db_username && $pw==$db_pw){
+						//echo 'You are logged in.';
+						$_SESSION['admin_loggedin_username'] = $username;
+                        //header("Location: /dariusadmin/index.php"); //continue to login required page
+                	}
+                	else
+						echo 'Incorrect Username or Password';
+				}
+        }
 }
 ?>
+
+<html>
+<head><title>Sample Login</title></head>
+<body>
+
+
+<?
+
+	if($_SESSION['admin_loggedin_username']){
+		$loggedin_query = mysql_query("SELECT fname FROM admin_users WHERE username='$username'");
+		$loggedin_row = mysql_fetch_assoc($loggedin_query);
+		$loggedin_name = $loggedin_row['fname'];
+		echo 'Welcome '.$loggedin_name.'. You are now logged in.<br />';
+		echo '<a href="logout.php">Logout</a>';
+	}
+	else{
+		echo '<form action="index.php" method="POST" />';
+		//echo '<input type="hidden" name="registered" value="1"/><br />';
+		echo 'User Name:<br />';
+		echo '<input type="text" name="username" /><br />';
+		echo '<br />';
+		echo 'Password:<br />';
+		echo '<input type="password" name="pw" /><br />';
+		echo '<br />';
+		echo '<input type="submit" value="Submit" /><br />';
+		echo '</form>';
+		
+		echo 'OR<br />';
+
+		echo 'Register New Login:<br />';
+		echo '<form action="register.php" method="POST" />';
+		echo '<input type="hidden" name="registered" value="0"/><br />';
+		echo 'First Name:<br />';
+		echo '<input type="text" name="fname" /><br />';
+		echo 'Last Name:<br />';
+		echo '<input type="text" name="lname" /><br />';
+		echo 'Email:<br />';
+		echo '<input type="text" name="email" /><br />';
+		echo '<br />';
+		echo 'Username:<br />';
+		echo '<input type="text" name="username" /><br />';
+		echo 'Enter a Password:<br />';
+		echo '<input type="password" name="pw" /><br />';
+		echo 'Re-enter Password:<br />';
+		echo '<input type="password" name="pw2" /><br />';
+		echo '<br />';
+		echo '<input type="submit" value="Register" /><br />';
+		echo '</form>';
+	}
+?>
+</body>
+</html>
+
