@@ -1,0 +1,39 @@
+<?php
+
+$registered = $_POST['registered']; //hidden submit to flag for already existing
+$fname = $_POST['fname'];
+$lname = $_POST['lname'];
+$email = $_POST['email'];
+$username = $_POST['username'];
+$pw = $_POST['pw'];
+$pw2 = $_POST['pw2'];
+$active = $_GET['active']; //activate when email link is clicked
+
+
+if($registered=='0'){
+	mysql_connect("localhost","btsstage_darius","parna55u5") or die ("Couldn't Connect");
+	mysql_select_db("btsstage_DataSysServicesResourceMgr") or die ("Couldn't Find Database");
+	//echo 'Registered is valued at '.$registered;
+
+	if ($pw==$pw2){
+		//mysql_query("UPDATE admin_users SET registered='1', fname='$fname', lname='$lname', username='$lname', pw='$pw'");
+		mysql_query("INSERT INTO admin_users (fname, lname, email, username, pw, pw2) VALUES ('$fname','$lname','$email','$username','$pw','$pw2')");
+		
+		$query = mysql_query("SELECT * FROM admin_users ORDER BY id DESC LIMIT 1");
+        $row = mysql_fetch_assoc($query);
+		$id = $row['id'];
+		
+		$subject = 'Activate Login Account';
+		$message = '<a href="/dariusadmin/index.php?active=1&id='.$id.'">Click here to activate your login</a>';
+		$headers = 'From: darius.munoz@ucsf.edu' .
+			'Reply-To: darius.munoz@ucsf.edu' . "\r\n" .
+			'X-Mailer: PHP/' . phpversion();
+			mail($email, $subject, $message, $headers);
+			echo 'An email has been sent to '.$email.' with activation information.';
+			
+		//echo $id.' '.$fname.' '.$lname.' has been resgistered as '.$username;
+	}
+	else
+		echo 'Passwords do not match. Please re-type passwords.';
+}
+?>
